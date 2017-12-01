@@ -1,19 +1,32 @@
 #coding=utf-8
 from random import *
 import pandas as pd
-items_pool=dict()
+import numpy as np
 class LatentFactorModel:
-    users_array=
-    items_array=
+    users_array=np.zeros(0)
+    items_array=np.zeros(0)
     user_items_map=dict()
     items_pool_map=dict()
     P_map=dict()
     Q_map=dict()
-    def initModel(self, user_items_map, F_int):
+    dataset_path_string = '~/Datasets/ml-latest-small/'
+    def __init__(self, F_int):
         '''
-        description:  用参数 user_items 初始化P 和 Q
-        parameters: user_items: 每个用户的交互物品集合;F: 分类的个数 
+        description:  初始化P 和 Q
+        parameters: user_items: 每个用户的交互物品集合;F: 分类的个数
         '''
+        ratings_dataframe=pd.read_csv(dataset_path_string+'ratings.csv')
+        userId_series=ratings_dataframe['userId']
+        movieId_series=ratings_dataframe['movieId']
+        users_array=userId_series.unique()
+        items_array=movieId_series.unique()
+        for i in range(userId_series.size):
+            userId_string=userId_series.iloc(i)
+            movieId_string=movieId_series.iloc(i)
+            if userId_string not in self.user_items_map:
+                self.user_items_map[userId_string]=set()
+            self.user_items_map[userId_string].add(movieId_string)
+        print(movies)
         for user_int in range(len(users_array)):
             temp_map=dict()
             for f_int in range(F_int):
@@ -24,9 +37,7 @@ class LatentFactorModel:
             for items_int in range(len(items_array)):
                 temp_map[items_int]=0
             Q[f_int]=temp_map
-        return
-    def __init__(self):
-        return
+    return
 
     def randomSelectNegativeSamples(self, items):
         '''
@@ -54,26 +65,25 @@ class LatentFactorModel:
         parameters: user：用户的 id；P：一个 map（dict） 的数组，这个 map 的 key 为 f，value 为 puf；Q：一个 map（dict） 数组，key 为 f，value 为 qfi
         '''
         rank = dict()
-        for f, puf in self.P[user].items():
-            for i, qfi in self.Q[f].items():
+        for f, puf in self.P_map[user].items():
+            for i, qfi in self.Q_map[f].items():
                 if i not in rank:
                     rank[i] += puf * qfi
         return rank
 
     def latentFactorModel(self, user_items, F, N, alpha, lmd):
         '''
-        description: 用梯度下降的方法得到 P 和 Q 
+        description: 用梯度下降的方法得到 P 和 Q
         parameters: user_items: 一个用户和与这个用户交互过的所有物品集合; F: 要将 item 划分成多少个类; N: 迭代的次数; alpha:每次迭代更新的步长; lmd:正则化系数;
         '''
-        [self.P, self.Q] = self.initModel(user_items, F)
         for step in range(0,N):
             for user, items in user_items.items():
                 samples = self.randomSelectNegativeSamples(items)
                 for item, rui in samples.items():
                     eui = rui - Predict(user, item)
                     for f in range(0, F):
-                        P[user][f] += alpha * (eui * Q[item][f] - lmd * P[user][f])
-                        Q[item][f] += alpha * (eui * P[user][f] - lmd * Q[item][f])
+                        self.P_map[user][f] += alpha * (eui * self.Q_map[item][f] - lmd * self.P_map[user][f])
+                        self.Q_map[item][f] += alpha * (eui * self.P_map[user][f] - lmd * self.Q_map[item][f])
         alpha *= 0.9
     if __name__=='__main__':
         print('hello')
