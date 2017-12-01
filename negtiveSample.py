@@ -1,7 +1,6 @@
 #coding=utf-8
 from random import *
 import pandas as pd
-items_pool=dict()
 class LatentFactorModel:
     users_array=
     items_array=
