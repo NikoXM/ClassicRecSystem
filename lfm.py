@@ -83,15 +83,17 @@ class LatentFactorModel:
                 D_dict[f_int][item_int] = qif_float
 
         outputSize_int = 5
+        movies_dataframe = pd.read_csv('~/Datasets/ml-latest-small/movies.csv', index_col='movieId')
+
         for f_int in range(self.F_int):
             d_dict = D_dict[f_int]
             sorted_items_turple = sorted(d_dict.items(), key=lambda tuple:tuple[1], reverse=True)
-            self.cost_file.write("Class " + str(f_int) + " :")
+            self.cost_file.write("Class " + str(f_int) + " :\n")
             for i_int in range(outputSize_int):
-                item_string = str(sorted_items_turple[i_int][0])
-                score_string = str(sorted_items_turple[i_int][1])
-                self.cost_file.write(item_string+","+score_string+";")
-            self.cost_file.write("\n")
+                item_int = sorted_items_turple[i_int][0]
+                score_float = sorted_items_turple[i_int][1]
+                row_series = movies_dataframe.loc[item_int]
+                self.cost_file.write(str(item_int) + '\t' + row_series['title']+ "\t" + row_series['genres'] + "\t" + str(score_float) + "\n")
         return
 
     def randomSelectNegativeSamples(self, items_set):
