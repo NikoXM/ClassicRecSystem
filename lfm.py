@@ -47,7 +47,7 @@ class LatentFactorModel:
         for userId_int in self.users_series:
             temp_dict = dict()
             for f_int in range(self.F_int):
-                temp_dict[f_int] = 0.5
+                temp_dict[f_int] = random.random()
             self.P_dict[userId_int] = temp_dict
             # create the negtive samples
             user_items_set = self.user_items_dict[userId_int]
@@ -57,7 +57,7 @@ class LatentFactorModel:
         for itemId_int in self.items_series:
             temp_dict = dict()
             for f_int in range(self.F_int):
-                temp_dict[f_int] = 0.5
+                temp_dict[f_int] = random.random()
             self.Q_dict[itemId_int]=temp_dict
         return
 
@@ -74,7 +74,24 @@ class LatentFactorModel:
         # print(self.P_dict)
         # print("The Q_dict is: ")
         # print(self.Q_dict)
+        # Output the top-5 ralative movie for every class
+        D_dict = dict()
+        for f_int in range(self.F_int):
+            D_dict[f_int] = dict()
+        for item_int, items_dict in self.Q_dict.items():
+            for f_int, qif_float in items_dict.items():
+                D_dict[f_int][item_int] = qif_float
 
+        outputSize_int = 5
+        for f_int in range(self.F_int):
+            d_dict = D_dict[f_int]
+            sorted_items_turple = sorted(d_dict.items(), key=lambda tuple:tuple[1], reverse=True)
+            self.cost_file.write("Class " + str(f_int) + " :")
+            for i_int in range(outputSize_int):
+                item_string = str(sorted_items_turple[i_int][0])
+                score_string = str(sorted_items_turple[i_int][1])
+                self.cost_file.write(item_string+","+score_string+";")
+            self.cost_file.write("\n")
         return
 
     def randomSelectNegativeSamples(self, items_set):
@@ -153,14 +170,16 @@ class LatentFactorModel:
                 for item_int, rui_int in negtive_samples_dict.items():
                     eui_float = rui_int - self.predict(user_int, item_int)
                     for f_int in range(0, self.F_int):
-                        self.P_dict[user_int][f_int] += self.alpha_float * (eui_float * self.Q_dict[item_int][f_int] - self.lmd_float * self.P_dict[user_int][f_int])
-                        self.Q_dict[item_int][f_int] += self.alpha_float * (eui_float * self.P_dict[user_int][f_int] - self.lmd_float * self.Q_dict[item_int][f_int])
+                        deltaP_float = self.alpha_float * (eui_float * self.Q_dict[item_int][f_int] - self.lmd_float * self.P_dict[user_int][f_int])
+                        deltaQ_float = self.alpha_float * (eui_float * self.P_dict[user_int][f_int] - self.lmd_float * self.Q_dict[item_int][f_int])
+                        self.P_dict[user_int][f_int] += deltaP_float
+                        self.Q_dict[item_int][f_int] += deltaQ_float
             cost_float = self.costFunction()
             self.cost_file.write(str(cost_float) + '\n');
         # alpha_float *= 0.9
 
 if __name__=='__main__':
-    lfm = LatentFactorModel(5,2,0.02,0.1)
+    lfm = LatentFactorModel(5,10,0.02,0.1)
     start = time.clock()
     lfm.trainModel()
     stop = time.clock()
